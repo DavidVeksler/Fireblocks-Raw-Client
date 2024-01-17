@@ -1,0 +1,24 @@
+{
+  "name": "fireblocks_raw_client",
+  "version": "1.0.0",
+  "description": "A set of scripts to send raw transactions to Fireblocks to make operations on unsupported tokens or hidden vaults.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ethereumjs/common": "^2.3.1",
+    "@ethereumjs/tx": "^3.2.1",
+    "fireblocks-sdk": "^1.5.22",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.4",
+    "web3": "^1.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5"
+  }
+}

@@ -1,0 +1,9 @@
+Coin,RPC
+BSC,https://bsc-dataseed1.bnbchain.org
+MATIC,https://polygon-rpc.com
+Polygon,https://polygon-rpc.com
+Cronos,https://evm.cronos.org
+Avalanche,https://avalanche.public-rpc.com
+Arbitrum,https://arb1.arbitrum.io/rpc
+Optimism,https://mainnet.optimism.io
+ETC,https://etc.rivet.link
