@@ -111,19 +111,21 @@ async function handleNativeTokenTransfer(
   const accountBalanceInWei = web3.utils.toBN(
     await web3.eth.getBalance(web3.eth.defaultAccount)
   );
-
-  const currentGasPrice = web3.utils.toBN(await web3.eth.getGasPrice());
-  console.log(`Current gas price: ${currentGasPrice.toString()} wei`);
+  console.log(`Account balance: ${accountBalanceInWei.toString()} wei`);
 
   if (accountBalanceInWei.isZero()) {
     console.error("\x1b[31mERROR: Account balance is ZERO\x1b[0m");
     return;
   }
 
-  const transferAmountInWei = web3.utils.toWei(
-    transferAmount.toString(),
-    "ether"
+  const currentGasPrice = web3.utils.toBN(await web3.eth.getGasPrice());
+  console.log(`Current gas price: ${currentGasPrice.toString()} wei`);
+
+  // Convert transferAmount to Wei and then to BigNumber
+  const transferAmountInWei = web3.utils.toBN(
+    web3.utils.toWei(transferAmount.toString(), "ether")
   );
+
   if (transferAmountInWei.gt(accountBalanceInWei)) {
     console.error(
       "\x1b[31mERROR: Insufficient balance for the transfer\x1b[0m"
