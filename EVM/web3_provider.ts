@@ -67,7 +67,7 @@ export async function initWeb3Provider(
         let currentStatus = status;
         let txInfo;
 
-        // Uncomment for hardcoded txid
+        // Uncomment for hardcoded txid        
         // txInfo = await fireblocksApiClient.getTransactionById(
         //   "[ADDRESS]"
         // );
@@ -79,12 +79,7 @@ export async function initWeb3Provider(
           currentStatus != TransactionStatus.CANCELLED
         ) {
           try {
-            console.log(
-              colorLog(
-                `Polling for tx ${id}; status: ${currentStatus}, note: ${note}`,
-                "35"
-              )
-            ); // Magenta text
+            console.log(colorLog(`Polling for tx ${id}; status: ${currentStatus}, note: ${note}`, "35")); // Magenta text
             txInfo = await fireblocksApiClient.getTransactionById(id);
             currentStatus = txInfo.status;
           } catch (err) {
@@ -101,6 +96,7 @@ export async function initWeb3Provider(
         }
 
         // Handling transaction information
+        // fetch existing transaction
         if (!txInfo) {
           txInfo = await fireblocksApiClient.getTransactionById(id);
         }
@@ -127,7 +123,7 @@ export async function initWeb3Provider(
 
         return `0x${signedTransaction.serialize().toString("hex")}`;
       } catch (error) {
-        console.error("Transaction error:", error);
+        console.error("\x1b[31mTransaction error:", error, "\x1b[0m");
       }
     },
   };
