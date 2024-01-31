@@ -14,7 +14,7 @@ export async function transfer(
   recipientAddress,
   assetIdentifier,
   assetSymbol,
-  transferAmount = 0, // In token units
+  transferAmount = 0,  // In token units
   erc20ContractAddress?,
   transactionFilename?
 ) {
@@ -30,12 +30,7 @@ export async function transfer(
   );
 
   if (erc20ContractAddress) {
-    await handleErc20Transfer(
-      web3,
-      erc20ContractAddress,
-      recipientAddress,
-      transferAmount
-    );
+    await handleErc20Transfer(web3, erc20ContractAddress, recipientAddress, transferAmount);
   } else {
     await handleNativeTokenTransfer(web3, recipientAddress, transferAmount);
   }
@@ -43,78 +38,57 @@ export async function transfer(
   console.log(`Transfer process completed.`);
 }
 
-async function handleErc20Transfer(
-  web3,
-  erc20ContractAddress,
-  recipientAddress,
-  transferAmount
-) {
+async function handleErc20Transfer(web3, erc20ContractAddress, recipientAddress, transferAmount) {
   const erc20Contract = new web3.eth.Contract(abi, erc20ContractAddress);
   const tokenDecimals = await erc20Contract.methods.decimals().call();
-  const accountBalanceInSmallestUnit = await erc20Contract.methods
-    .balanceOf(web3.eth.defaultAccount)
-    .call();
+  const accountBalanceInSmallestUnit = await erc20Contract.methods.balanceOf(web3.eth.defaultAccount).call();
 
-  console.log(
-    `ERC20 contract balance: ${accountBalanceInSmallestUnit} (smallest unit, ${tokenDecimals} decimals)`
-  );
+  // console.log(`ERC20 contract balance: ${accountBalanceInSmallestUnit} (smallest unit, ${tokenDecimals} decimals)`);
+  console.log(`ERC20 contract balance: ${web3.utils.fromWei(accountBalanceInSmallestUnit.toString(), 'ether')}`);
 
-  let transferAmountInSmallestUnit = convertToSmallestTokenUnit(
-    transferAmount,
-    tokenDecimals,
-    web3
-  );
+  let transferAmountInSmallestUnit = convertToSmallestTokenUnit(transferAmount, tokenDecimals, web3);
 
   if (transferAmountInSmallestUnit > accountBalanceInSmallestUnit) {
     console.error(`\x1b[31mInsufficient balance for the transfer.\x1b[0m`);
     return;
   }
 
-  console.log(
-    `Initiating transfer of ${transferAmount} tokens (${transferAmountInSmallestUnit} in smallest unit)`
-  );
+  console.log(`Initiating transfer of ${transferAmount} tokens (${transferAmountInSmallestUnit} in smallest unit)`);
 
-  const transactionData = erc20Contract.methods
-    .transfer(recipientAddress, transferAmountInSmallestUnit)
-    .encodeABI();
-
+  const transactionData = erc20Contract.methods.transfer(recipientAddress, transferAmountInSmallestUnit).encodeABI();
   const currentGasPrice = web3.utils.toBN(await web3.eth.getGasPrice());
+  
   console.log(`Current gas price: ${currentGasPrice.toString()} wei`);
+
+  // Estimate Gas
+  const estimatedGas = await erc20Contract.methods.transfer(recipientAddress, transferAmountInSmallestUnit)
+    .estimateGas({ from: web3.eth.defaultAccount });
+
+  console.log(`Estimated Gas: ${estimatedGas}`);
 
   const signedTransaction = await web3.eth.signTransaction({
     to: erc20ContractAddress,
     data: transactionData,
     value: web3.utils.toBN("0x00"),
     gasPrice: currentGasPrice,
-    gasLimit: 210000, // Adjust as needed
+    gasLimit: estimatedGas, // Dynamically estimated gas
   });
 
-  const transactionReceipt = await web3.eth.sendSignedTransaction(
-    signedTransaction.raw || signedTransaction
-  );
+  console.log(signedTransaction);
+  const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.raw || signedTransaction);
 
-  console.log(
-    `ERC20 transfer completed. Transaction receipt: ${JSON.stringify(
-      transactionReceipt
-    )}`
-  );
-  console.log(
-    `Transaction Hash: \x1b[32m${transactionReceipt.transactionHashx}\x1b[0m`
-  );
+  console.log(`ERC20 transfer completed. Transaction receipt: ${JSON.stringify(transactionReceipt)}`);
+  console.log(`Transaction Hash: \x1b[32m${transactionReceipt.transactionHash}\x1b[0m`);
 }
 
-async function handleNativeTokenTransfer(
-  web3,
-  recipientAddress,
-  transferAmount
-) {
-  const accountBalanceInWei = web3.utils.toBN(
-    await web3.eth.getBalance(web3.eth.defaultAccount)
-  );
+
+async function handleNativeTokenTransfer(web3, recipientAddress, transferAmount) {
+
+  const accountBalanceInWei = web3.utils.toBN(await web3.eth.getBalance(web3.eth.defaultAccount));
   console.log(`Account balance: ${accountBalanceInWei.toString()} wei`);
 
   if (accountBalanceInWei.isZero()) {
-    console.error("\x1b[31mERROR: Account balance is ZERO\x1b[0m");
+    console.error('\x1b[31mERROR: Account balance is ZERO\x1b[0m');
     return;
   }
 
@@ -122,18 +96,15 @@ async function handleNativeTokenTransfer(
   console.log(`Current gas price: ${currentGasPrice.toString()} wei`);
 
   // Convert transferAmount to Wei and then to BigNumber
-  const transferAmountInWei = web3.utils.toBN(
-    web3.utils.toWei(transferAmount.toString(), "ether")
-  );
+  const transferAmountInWei = web3.utils.toBN(web3.utils.toWei(transferAmount.toString(), 'ether'));
 
   if (transferAmountInWei.gt(accountBalanceInWei)) {
-    console.error(
-      "\x1b[31mERROR: Insufficient balance for the transfer\x1b[0m"
-    );
+    console.error('\x1b[31mERROR: Insufficient balance for the transfer\x1b[0m');
     return;
   }
 
   console.log(`Initiating native token transfer of ${transferAmount} Ether`);
+
 
   const signedTransaction = await web3.eth.signTransaction({
     to: recipientAddress,
@@ -141,30 +112,21 @@ async function handleNativeTokenTransfer(
     gasPrice: currentGasPrice,
     gasLimit: 21000, // Adjust as needed
   });
+  
+  const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.raw || signedTransaction);
 
-  const transactionReceipt = await web3.eth.sendSignedTransaction(
-    signedTransaction.raw || signedTransaction
-  );
-
-  console.log(
-    `Native token transfer completed. Transaction receipt: ${JSON.stringify(
-      transactionReceipt
-    )}`
-  );
-  console.log(
-    `Transaction Hash: \x1b[32m${transactionReceipt.transactionHashx}\x1b[0m`
-  );
+  console.log(`Native token transfer completed. Transaction receipt: ${JSON.stringify(transactionReceipt)}`);
+  console.log(`Transaction Hash: \x1b[32m${transactionReceipt.transactionHash}\x1b[0m`);
 }
 
 function convertToSmallestTokenUnit(amount, decimals, web3) {
   // Use web3's toWei function for conversion, which handles decimals properly.
-  // Since toWei expects Ether as input and converts it to Wei,
+  // Since toWei expects Ether as input and converts it to Wei, 
   // we use it here by treating the 'amount' as Ether and 'decimals' as the equivalent of Ether's 18 decimals.
-  const amountInWeiEquivalent = web3.utils.toWei(amount.toString(), "ether");
+  const amountInWeiEquivalent = web3.utils.toWei(amount.toString(), 'ether');
   // Adjust the conversion by the difference in decimals (18 - token's decimals)
   const decimalsDifference = 18 - decimals;
-  const amountInSmallestUnit =
-    BigInt(amountInWeiEquivalent) / 10n ** BigInt(decimalsDifference);
+  const amountInSmallestUnit = BigInt(amountInWeiEquivalent) / 10n ** BigInt(decimalsDifference);
 
   return amountInSmallestUnit;
 }
