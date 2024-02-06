@@ -79,11 +79,19 @@ export async function signBtcTransaction(
       console.log(`Transaction ID ${createTxResponse.id} Status: ${txStatus}`);
 
       if (txStatus === TransactionStatus.FAILED || txStatus === TransactionStatus.BLOCKED) {
-        console.error(`Transaction failed or blocked: ID ${createTxResponse.id}`);
+        console.error(`Transaction ${txStatus}: ID ${createTxResponse.id}`);
         return;
       } else if (txStatus === TransactionStatus.COMPLETED) {
         console.log('Transaction completed successfully:', transactionInfo);
       }
+
+      if (txStatus === TransactionStatus.FAILED || txStatus === TransactionStatus.BLOCKED || txStatus === TransactionStatus.REJECTED) {
+        // cancel failed transactions
+        const transactionDetails = await fireblocksApi.cancelTransactionById(txId);
+        console.log(`Cancelled ID ${txId}:`, transactionDetails);
+      }
+
+
     } catch (error) {
       console.error(`Error polling transaction ID ${createTxResponse.id}:`, error);
     }

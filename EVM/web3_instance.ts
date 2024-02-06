@@ -13,7 +13,7 @@ export function colorLog(message, colorCode) {
   return `\x1b[${colorCode}m${message}\x1b[0m`;
 }
 
-export async function initWeb3Provider(
+export async function initWeb3Instance(
   fireblocksApiClient,
   httpProviderUrl,
   vaultAccountId,
@@ -45,6 +45,7 @@ export async function initWeb3Provider(
         amount === 0 ? "full balance" : amount
       } ${tokenName} over ${assetId} from vault ${vaultAccountId} to ${destAddress} (#${filename})`;
       console.log(colorLog(note, "33")); // Yellow text
+      process.stdout.write(`\x1b]2;${note}\x07`);
 
       try {
         // Creating the transaction
@@ -69,13 +70,15 @@ export async function initWeb3Provider(
 
         // Uncomment for hardcoded txid        
         // txInfo = await fireblocksApiClient.getTransactionById(
-        //   "[ADDRESS]"
+        //   ""
         // );
         // currentStatus = TransactionStatus.COMPLETED;
+        
 
         while (
           currentStatus !== TransactionStatus.COMPLETED &&
           currentStatus !== TransactionStatus.FAILED &&
+          currentStatus !== TransactionStatus.BLOCKED &&
           currentStatus != TransactionStatus.CANCELLED
         ) {
           try {

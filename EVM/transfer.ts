@@ -1,6 +1,6 @@
 // Script to make raw transactions for Fireblocks for either ERC20 or platform tokens
 
-import { initWeb3Provider } from "./web3_provider";
+import { initWeb3Instance } from "./web3_instance";
 import { FireblocksSDK } from "fireblocks-sdk";
 
 const abi = JSON.parse(
@@ -18,7 +18,7 @@ export async function transfer(
   erc20ContractAddress?,
   transactionFilename?
 ) {
-  const web3 = await initWeb3Provider(
+  const web3 = await initWeb3Instance(
     fireblocksApiClient,
     ethereumProviderUrl,
     vaultId,
@@ -49,7 +49,7 @@ async function handleErc20Transfer(web3, erc20ContractAddress, recipientAddress,
   let transferAmountInSmallestUnit = convertToSmallestTokenUnit(transferAmount, tokenDecimals, web3);
 
   if (transferAmountInSmallestUnit > accountBalanceInSmallestUnit) {
-    console.error(`\x1b[31mInsufficient balance for the transfer.\x1b[0m`);
+    console.error(`\x1b[31mERROR Insufficient token balance for the transfer.\x1b[0m`);
     return;
   }
 
@@ -71,7 +71,7 @@ async function handleErc20Transfer(web3, erc20ContractAddress, recipientAddress,
     data: transactionData,
     value: web3.utils.toBN("0x00"),
     gasPrice: currentGasPrice,
-    gasLimit: estimatedGas, // Dynamically estimated gas
+    gasLimit: estimatedGas * 4, // Dynamically estimated gas
   });
 
   console.log(signedTransaction);
@@ -99,7 +99,7 @@ async function handleNativeTokenTransfer(web3, recipientAddress, transferAmount)
   const transferAmountInWei = web3.utils.toBN(web3.utils.toWei(transferAmount.toString(), 'ether'));
 
   if (transferAmountInWei.gt(accountBalanceInWei)) {
-    console.error('\x1b[31mERROR: Insufficient balance for the transfer\x1b[0m');
+    console.error('\x1b[31mERROR: Insufficient native token balance for the transfer\x1b[0m');
     return;
   }
 
