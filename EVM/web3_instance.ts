@@ -17,11 +17,12 @@ export async function initWeb3Instance(
   fireblocksApiClient,
   httpProviderUrl,
   vaultAccountId,
-  assetId = "FTM",
+  assetId,
   tokenName = "ETH",
   amount,
   destAddress,
-  filename
+  filename,
+  existingTransactionId?
 ) {
   const webProvider = new Web3.providers.HttpProvider(httpProviderUrl);
   let web3;
@@ -47,33 +48,41 @@ export async function initWeb3Instance(
       console.log(colorLog(note, "33")); // Yellow text
       process.stdout.write(`\x1b]2;${note}\x07`);
 
-      try {
-        // Creating the transaction
-        const { status, id } = await fireblocksApiClient.createTransaction({
-          operation: TransactionOperation.RAW,
-          assetId,
-          source: {
-            type: PeerType.VAULT_ACCOUNT,
-            id: String(vaultAccountId),
-          },
-          note,
-          extraParameters: {
-            rawMessageData: {
-              messages: [{ content }],
-            },
-          },
-        });
-
-        // Polling for transaction status
-        let currentStatus = status;
+      try {        
+        let currentStatus;
         let txInfo;
+        let txid;
+                
+        if (existingTransactionId) {
+          console.log(`Resume transaction ${existingTransactionId}`)
+          txInfo = await fireblocksApiClient.getTransactionById(
+            existingTransactionId
+          );
+          currentStatus = txInfo.status;
+          txid = txInfo.id
+          console.log(`Existing transaction ${txid} - ${currentStatus}`);
+        } else {
+          // Creating the transaction
+          const { status, id } = await fireblocksApiClient.createTransaction({
+            operation: TransactionOperation.RAW,
+            assetId,
+            source: {
+              type: PeerType.VAULT_ACCOUNT,
+              id: String(vaultAccountId),
+            },
+            note,
+            extraParameters: {
+              rawMessageData: {
+                messages: [{ content }],
+              },
+            },
+          });
+          console.log(`Created transaction ${id} - ${status}`);
+          currentStatus = status;      
+          txid = id;       
+        }        
 
-        // Uncomment for hardcoded txid        
-        // txInfo = await fireblocksApiClient.getTransactionById(
-        //   ""
-        // );
-        // currentStatus = TransactionStatus.COMPLETED;
-        
+        // Polling for transaction status       
 
         while (
           currentStatus !== TransactionStatus.COMPLETED &&
@@ -82,13 +91,29 @@ export async function initWeb3Instance(
           currentStatus != TransactionStatus.CANCELLED
         ) {
           try {
-            console.log(colorLog(`Polling for tx ${id}; status: ${currentStatus}, note: ${note}`, "35")); // Magenta text
-            txInfo = await fireblocksApiClient.getTransactionById(id);
+            console.log(
+              colorLog(
+                `Polling for tx ${txid}; status: ${currentStatus}, note: ${note}`,
+                "35"
+              )
+            ); // Magenta text
+            txInfo = await fireblocksApiClient.getTransactionById(txid);
             currentStatus = txInfo.status;
           } catch (err) {
             console.error(colorLog("Error while polling transaction:", "31")); // Red text for errors
           }
           await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        // cancel failed transactions
+        if (
+          currentStatus === TransactionStatus.FAILED ||
+          currentStatus === TransactionStatus.BLOCKED ||
+          currentStatus === TransactionStatus.REJECTED
+        ) {
+          const transactionDetails =
+            await fireblocksApiClient.cancelTransactionById(txid);
+          console.log(`Cancelled ID ${txid}: ${transactionDetails}`);
         }
 
         if (currentStatus === TransactionStatus.FAILED) {
@@ -101,7 +126,7 @@ export async function initWeb3Instance(
         // Handling transaction information
         // fetch existing transaction
         if (!txInfo) {
-          txInfo = await fireblocksApiClient.getTransactionById(id);
+          txInfo = await fireblocksApiClient.getTransactionById(txid);
         }
         if (!txInfo.signedMessages) {
           throw new Error("txInfo.signedMessages is undefined");

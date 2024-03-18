@@ -1,36 +1,55 @@
-// Script to make raw transactions for Fireblocks for either ERC20 or platform tokens
-
 import { initWeb3Instance } from "./web3_instance";
 import { FireblocksSDK } from "fireblocks-sdk";
 
 const abi = JSON.parse(
-  '[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getOwner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bool","name":"mintable","type":"bool"},{"internalType":"address","name":"owner","type":"address"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"mint","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintable","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
+  '[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"`g`etOwner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bool","name":"mintable","type":"bool"},{"internalType":"address","name":"owner","type":"address"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"mint","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"mintable","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
 );
 
 export async function transfer(
   fireblocksApiClient: FireblocksSDK,
   ethereumProviderUrl,
-  vaultId,
+  sourceVaultAccountId,
   recipientAddress,
   assetIdentifier,
   assetSymbol,
-  transferAmount = 0,  // In token units
+  transferAmount = 0, // In token units
   erc20ContractAddress?,
-  transactionFilename?
+  transactionFilename?,
+  existingTransactionId?,
+  destinationVault = 0
 ) {
   const web3 = await initWeb3Instance(
     fireblocksApiClient,
     ethereumProviderUrl,
-    vaultId,
+    sourceVaultAccountId,
     assetIdentifier,
     assetSymbol,
     transferAmount,
     recipientAddress,
-    transactionFilename
+    transactionFilename,
+    existingTransactionId
   );
 
-  if (erc20ContractAddress) {
-    await handleErc20Transfer(web3, erc20ContractAddress, recipientAddress, transferAmount);
+  if (destinationVault > 0) {
+    // Assume destinationVault is a string representing the destination vault ID for clarity
+    // Convert transferAmount to the appropriate format if needed   
+
+    return performInternalTransfer(
+      web3,
+      fireblocksApiClient,
+      "ETH",
+      transferAmount,
+      sourceVaultAccountId,
+      destinationVault      
+    );
+      
+  } else if (erc20ContractAddress) {
+    await handleErc20Transfer(
+      web3,
+      erc20ContractAddress,
+      recipientAddress,
+      transferAmount
+    );
   } else {
     await handleNativeTokenTransfer(web3, recipientAddress, transferAmount);
   }
@@ -38,30 +57,128 @@ export async function transfer(
   console.log(`Transfer process completed.`);
 }
 
-async function handleErc20Transfer(web3, erc20ContractAddress, recipientAddress, transferAmount) {
+async function performInternalTransfer(
+  web3,
+  fireblocksApiClient,
+  assetId,
+  amount,
+  srcId,
+  destId,  
+) {
+  // Check if amount is 0 and fetch the maximum spendable amount if true
+  if (amount === 0) {
+    try {            
+
+      if (assetId === 'ETH'){
+        // fetch the the maximum spendable amount, subtract for gas
+        const maxSpendableInWei = await web3.eth.getBalance(web3.eth.defaultAccount);
+        
+        // Estimate gas fee
+        const gasPrice = await web3.eth.getGasPrice();
+        // Use a typical gas limit for a transfer, adjust as necessary
+        const gasLimit = 21000; 
+        const gasFee = gasPrice * gasLimit;
+        // Subtract the gas fee from the maximum spendable amount
+        amount = maxSpendableInWei - gasFee;        
+        console.log(`Updated amount to maximum spendable minus gas fee: ${amount}`);
+        if (amount < 0) {
+          throw 'Negative amount: ' + amount;
+        }
+        // convert to ETH:
+        amount = web3.utils.fromWei(maxSpendableInWei, 'ether');
+      }
+      else{
+        amount = await web3.eth.getBalance(web3.eth.defaultAccount);   
+        console.log(`Updated amount to maximum spendable: ${amount}`);
+      }
+
+      if (amount > 10)
+      {
+        throw 'Amount is > 10, are you sure? ' + amount;
+      }
+      
+    } catch (error) {
+      console.error(`Failed to fetch maximum spendable amount:`, error);
+      throw error;
+    }
+  }
+
+  const transactionNote = `Transfer from vault ${srcId} to vault ${destId} for ${amount} ${assetId}`;
+
+  let payload = {
+    assetId: assetId,
+    amount: String(amount), // Ensure amount is a string if required by the API, otherwise adjust accordingly
+    source: {
+      type: "VAULT_ACCOUNT", // Assuming PeerType.VAULT_ACCOUNT is available and correct, replace with actual enum or constant if necessary
+      id: String(srcId),
+    },
+    destination: {
+      type: "VAULT_ACCOUNT", // Same assumption as above
+      id: String(destId),
+    },
+    note: transactionNote,
+  };
+
+  try {
+    const result = await fireblocksApiClient.createTransaction(payload);
+    console.log(`${transactionNote}:`, JSON.stringify(result, null, 2));
+    return result;
+  } catch (error) {
+    console.error("Failed to perform internal transfer:", error);
+    throw error;
+  }
+
+  console.log(`Transfer submitted.`)
+  // Return a default result object if no transaction ID is available
+  return { id: null };
+}
+
+async function handleErc20Transfer(
+  web3,
+  erc20ContractAddress,
+  recipientAddress,
+  transferAmount
+) {
   const erc20Contract = new web3.eth.Contract(abi, erc20ContractAddress);
   const tokenDecimals = await erc20Contract.methods.decimals().call();
-  const accountBalanceInSmallestUnit = await erc20Contract.methods.balanceOf(web3.eth.defaultAccount).call();
+  const accountBalanceInSmallestUnit = await erc20Contract.methods
+    .balanceOf(web3.eth.defaultAccount)
+    .call();
 
-  // console.log(`ERC20 contract balance: ${accountBalanceInSmallestUnit} (smallest unit, ${tokenDecimals} decimals)`);
-  console.log(`ERC20 contract balance: ${web3.utils.fromWei(accountBalanceInSmallestUnit.toString(), 'ether')}`);
+  console.log(
+    `ERC20 contract balance: ${web3.utils.fromWei(
+      accountBalanceInSmallestUnit.toString(),
+      "ether"
+    )}`
+  );
 
-  let transferAmountInSmallestUnit = convertToSmallestTokenUnit(transferAmount, tokenDecimals, web3);
+  let transferAmountInSmallestUnit = convertToSmallestTokenUnit(
+    transferAmount,
+    tokenDecimals,
+    web3
+  );
 
   if (transferAmountInSmallestUnit > accountBalanceInSmallestUnit) {
-    console.error(`\x1b[31mERROR Insufficient token balance for the transfer.\x1b[0m`);
+    console.error(
+      `\x1b[31mERROR Insufficient token balance for the transfer.\x1b[0m`
+    );
     return;
   }
 
-  console.log(`Initiating transfer of ${transferAmount} tokens (${transferAmountInSmallestUnit} in smallest unit)`);
+  console.log(
+    `Initiating transfer of ${transferAmount} tokens (${transferAmountInSmallestUnit} in smallest unit)`
+  );
 
-  const transactionData = erc20Contract.methods.transfer(recipientAddress, transferAmountInSmallestUnit).encodeABI();
+  const transactionData = erc20Contract.methods
+    .transfer(recipientAddress, transferAmountInSmallestUnit)
+    .encodeABI();
   const currentGasPrice = web3.utils.toBN(await web3.eth.getGasPrice());
-  
+
   console.log(`Current gas price: ${currentGasPrice.toString()} wei`);
 
   // Estimate Gas
-  const estimatedGas = await erc20Contract.methods.transfer(recipientAddress, transferAmountInSmallestUnit)
+  const estimatedGas = await erc20Contract.methods
+    .transfer(recipientAddress, transferAmountInSmallestUnit)
     .estimateGas({ from: web3.eth.defaultAccount });
 
   console.log(`Estimated Gas: ${estimatedGas}`);
@@ -71,24 +188,36 @@ async function handleErc20Transfer(web3, erc20ContractAddress, recipientAddress,
     data: transactionData,
     value: web3.utils.toBN("0x00"),
     gasPrice: currentGasPrice,
-    gasLimit: estimatedGas * 4, // Dynamically estimated gas
+    gasLimit: Math.floor(estimatedGas * 1.2), // Dynamically estimated gas, rounded down
   });
 
   console.log(signedTransaction);
-  const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.raw || signedTransaction);
+  const transactionReceipt = await web3.eth.sendSignedTransaction(
+    signedTransaction.raw || signedTransaction
+  );
 
-  console.log(`ERC20 transfer completed. Transaction receipt: ${JSON.stringify(transactionReceipt)}`);
-  console.log(`Transaction Hash: \x1b[32m${transactionReceipt.transactionHash}\x1b[0m`);
+  console.log(
+    `ERC20 transfer completed. Transaction receipt: ${JSON.stringify(
+      transactionReceipt
+    )}`
+  );
+  console.log(
+    `Transaction Hash: \x1b[32m${transactionReceipt.transactionHash}\x1b[0m`
+  );
 }
 
-
-async function handleNativeTokenTransfer(web3, recipientAddress, transferAmount) {
-
-  const accountBalanceInWei = web3.utils.toBN(await web3.eth.getBalance(web3.eth.defaultAccount));
+async function handleNativeTokenTransfer(
+  web3,
+  recipientAddress,
+  transferAmount
+) {
+  const accountBalanceInWei = web3.utils.toBN(
+    await web3.eth.getBalance(web3.eth.defaultAccount)
+  );
   console.log(`Account balance: ${accountBalanceInWei.toString()} wei`);
 
   if (accountBalanceInWei.isZero()) {
-    console.error('\x1b[31mERROR: Account balance is ZERO\x1b[0m');
+    console.error("\x1b[31mERROR: Account balance is ZERO\x1b[0m");
     return;
   }
 
@@ -96,15 +225,18 @@ async function handleNativeTokenTransfer(web3, recipientAddress, transferAmount)
   console.log(`Current gas price: ${currentGasPrice.toString()} wei`);
 
   // Convert transferAmount to Wei and then to BigNumber
-  const transferAmountInWei = web3.utils.toBN(web3.utils.toWei(transferAmount.toString(), 'ether'));
+  const transferAmountInWei = web3.utils.toBN(
+    web3.utils.toWei(transferAmount.toString(), "ether")
+  );
 
   if (transferAmountInWei.gt(accountBalanceInWei)) {
-    console.error('\x1b[31mERROR: Insufficient native token balance for the transfer\x1b[0m');
+    console.error(
+      "\x1b[31mERROR: Insufficient native token balance for the transfer\x1b[0m"
+    );
     return;
   }
 
   console.log(`Initiating native token transfer of ${transferAmount} Ether`);
-
 
   const signedTransaction = await web3.eth.signTransaction({
     to: recipientAddress,
@@ -112,22 +244,30 @@ async function handleNativeTokenTransfer(web3, recipientAddress, transferAmount)
     gasPrice: currentGasPrice,
     gasLimit: 21000, // Adjust as needed
   });
-  
-  const transactionReceipt = await web3.eth.sendSignedTransaction(signedTransaction.raw || signedTransaction);
 
-  console.log(`Native token transfer completed. Transaction receipt: ${JSON.stringify(transactionReceipt)}`);
-  console.log(`Transaction Hash: \x1b[32m${transactionReceipt.transactionHash}\x1b[0m`);
+  const transactionReceipt = await web3.eth.sendSignedTransaction(
+    signedTransaction.raw || signedTransaction
+  );
+
+  console.log(
+    `Native token transfer completed. Transaction receipt: ${JSON.stringify(
+      transactionReceipt
+    )}`
+  );
+  console.log(
+    `Transaction Hash: \x1b[32m${transactionReceipt.transactionHash}\x1b[0m`
+  );
 }
 
 function convertToSmallestTokenUnit(amount, decimals, web3) {
   // Use web3's toWei function for conversion, which handles decimals properly.
-  // Since toWei expects Ether as input and converts it to Wei, 
+  // Since toWei expects Ether as input and converts it to Wei,
   // we use it here by treating the 'amount' as Ether and 'decimals' as the equivalent of Ether's 18 decimals.
-  const amountInWeiEquivalent = web3.utils.toWei(amount.toString(), 'ether');
+  const amountInWeiEquivalent = web3.utils.toWei(amount.toString(), "ether");
   // Adjust the conversion by the difference in decimals (18 - token's decimals)
   const decimalsDifference = 18 - decimals;
-  const amountInSmallestUnit = BigInt(amountInWeiEquivalent) / 10n ** BigInt(decimalsDifference);
+  const amountInSmallestUnit =
+    BigInt(amountInWeiEquivalent) / 10n ** BigInt(decimalsDifference);
 
   return amountInSmallestUnit;
 }
-
